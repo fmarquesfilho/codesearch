@@ -79,11 +79,14 @@ end
 
 params[:q] = params[:q].gsub(/\s/, '+')
 
-url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}&sort=#{params[:sort]}&order=#{params[:order]}"
-headers = { :headers => { 'Accept' => 'application/vnd.github.v3' } }
+url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
+url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
+url += "&order=#{params[:order]}" unless params[:order].empty?
+
+headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-Agent' => 'coopera-codesearch' }
 
 puts "URL: #{url}"
-response = HTTParty.get(url, :options => headers)
+response = HTTParty.get(url, :headers => headers)
 
 raise response.inspect
 
