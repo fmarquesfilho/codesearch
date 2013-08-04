@@ -120,6 +120,7 @@ params[:q] = params[:q].gsub(/\s/, '+')
 url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
 url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
 url += "&order=#{params[:order]}" unless params[:order].empty?
+url += "&" + token
 
 headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-Agent' => 'coopera-codesearch' }
 
