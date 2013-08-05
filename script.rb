@@ -3,6 +3,7 @@ require 'httparty'
 require 'launchy'
 require 'socket'
 require 'awesome_print'
+require_relative 'aux'
 
 params = {}
 params[:type]  = ARGV[0]
@@ -121,13 +122,22 @@ url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
 url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
 url += "&order=#{params[:order]}" unless params[:order].empty?
 url += "&" + token
+url += "&per_page=100"
 
 headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-Agent' => 'coopera-codesearch' }
 
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
 
-ap response
+#Pagination
+unless response.headers['link'].nil?
+	links = pagination response.headers
+
+	while !links['next'].nil? do
+		response = HTTParty.get(links['next'], :headers => headers)
+		links = pagination response.headers
+	end
+end
 
 unless params[:csv].nil?
 end
