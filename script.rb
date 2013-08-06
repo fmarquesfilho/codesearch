@@ -127,7 +127,7 @@ headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
 
-ap process_data(response, token, headers, params) 
+ap process_data_code(response, token, headers, params) 
 
 #Pagination
 unless response.headers['link'].nil?
