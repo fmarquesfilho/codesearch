@@ -127,15 +127,17 @@ headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
 
-ap process_data_code(response, token, headers, params) 
+process_data_repos(response, token, params) 
 
 #Pagination
 unless response.headers['link'].nil?
-	links = pagination response.headers
+	links = pagination(response.headers)
 
 	while !links['next'].nil? do
 		response = HTTParty.get(links['next'], :headers => headers)
-		links = pagination response.headers
+		links = pagination(response.headers)
+		verify_rate_limit(response.headers)
+		process_data_repos(response, token, params) 
 	end
 end
 
