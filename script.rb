@@ -82,7 +82,6 @@ if params[:type].nil? || params[:q].nil? || !%w[repositories code issues users].
 end
 
 #START OAuth
-
 	client_id = 'd74fcf012a3e382c7fed'
 	client_secret = '653999ffa39d81e9ae4b0138d4685045a625d967' 
 
@@ -113,7 +112,6 @@ end
 	#get token
 	token = HTTParty.post('https://github.com/login/oauth/access_token', 
         :query => {:client_id => client_id, :client_secret => client_secret, :code => code})
-
 #END OAuth
 
 params[:q] = params[:q].gsub(/\s/, '+')
@@ -128,6 +126,8 @@ headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-
 
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
+
+ap process_data(response, token, headers, params) 
 
 #Pagination
 unless response.headers['link'].nil?

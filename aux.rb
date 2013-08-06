@@ -11,3 +11,46 @@ def pagination header
 	end
 	return links
 end
+
+def process_data response, token, headers, params
+	data = []
+	
+	response['items'].each do |item|
+
+		data_aux = { 	'login' 					=> item['owner']['login'],
+									'email' 					=> get_email(item['owner']['login'], token, headers),
+									'name' 						=> item['name'],
+									'string_seargh' 	=> params,
+									'created_at'			=> item['created_at'],
+									'pushed_at' 			=> item['pushed_at'],
+									'watchers_count'	=> item['watchers_count'],
+									'forks_count' 		=> item['forks_count'],
+									'contributors'		=> get_contributors(item['owner']['login'], item['name'], token, headers)}
+
+		data << data_aux
+	end
+
+	return data
+end
+
+def get_email login, token, headers
+	url = 'https://api.github.com/users/' + login
+	url += '?' + token
+
+	response = HTTParty.get(url, :headers => headers)
+	return response['email']
+end
+
+def get_contributors owner, repos, token, headers
+	url = 'https://api.github.com/repos/' + owner + '/' + repos + '/contributors'
+	url += '?' + token
+
+	contributors = []
+	response = HTTParty.get(url, headers)
+
+	response.each do |item| 
+		contributors << {'login' => item['login'], 'email' => get_email(item['login'], token, headers)}
+	end
+
+	return contributors
+end
