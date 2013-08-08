@@ -79,35 +79,54 @@ end
 
 params[:q] = params[:q].gsub(/\s/, '+')
 
-url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
-url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
-url += "&order=#{params[:order]}" unless params[:order].empty?
+json = []
+i, j = 1, 0
+begin
+  url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
+  url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
+  url += "&order=#{params[:order]}" unless params[:order].empty?
+  url += "&per_page=100&page=#{i}"
 
-headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-Agent' => 'coopera-codesearch' }
+  headers = {
+    'Accept' => 'application/vnd.github.preview.text-match+json',
+    'User-Agent' => 'coopera-codesearch'
+    #'Authorization' => '7306b8635f35de650ad22cc3dbd71498a07d3ced'
+  }
 
-puts "URL: #{url}"
-response = HTTParty.get(url, :headers => headers)
-results = response['items']
+  response = HTTParty.get(url, :headers => headers)
+  results = response['items']
+  puts "URL: #{url} STATUS: #{response.code}"
 
-
-  json = {}
-  results.each do |res|
-    json.merge!({:login => res['owner']['login']})
-    json.merge!({:id => res['id']})
-    json.merge!({:name => res['name']})
-    json.merge!({:full_name => res['full_name']})
-    json.merge!({:description => res['description']})
-    json.merge!({:fork => res['fork']})
-    json.merge!({:html_url => res['html_url']})
-    json.merge!({:homepage => res['homepage']})
-    json.merge!({:language => res['language']})
-    json.merge!({:forks_count => res['forks_count']})
-    json.merge!({:watchers_count => res['watchers_count']})
-    json.merge!({:open_issues_count => res['open_issues_count']})
-    json.merge!({:created_at => res['created_at']})
-    json.merge!({:pushed_at => res['pushed_at']})
+  if i == 1 && !response.headers["link"].nil?
+    j = response.headers["link"].scan(/&page=(\d+)/)[1][0].to_i
   end
 
+  unless results.nil? 
+    results.each do |res|
+      temp = {}
+      temp.merge!({:login => res['owner']['login']})
+      temp.merge!({:id => res['id']})
+      temp.merge!({:name => res['name']})
+      temp.merge!({:full_name => res['full_name']})
+      temp.merge!({:description => res['description']})
+      temp.merge!({:fork => res['fork']})
+      temp.merge!({:html_url => res['html_url']})
+      temp.merge!({:homepage => res['homepage']})
+      temp.merge!({:language => res['language']})
+      temp.merge!({:forks_count => res['forks_count']})
+      temp.merge!({:watchers_count => res['watchers_count']})
+      temp.merge!({:open_issues_count => res['open_issues_count']})
+      temp.merge!({:created_at => res['created_at']})
+      temp.merge!({:pushed_at => res['pushed_at']})
+      json << temp
+    end
+  end
+
+  i += 1
+end while i <= j
+
 CSV.open("results.csv", "w") do |csv|
-    csv << json.values
+  json.each do |h|
+    csv << h.values
+  end
 end
