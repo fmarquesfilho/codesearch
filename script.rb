@@ -1,12 +1,12 @@
 # Usage: $ ruby script.rb [repositories|code|issues|users] [query_string] [OPTIONAL stars|forks|updated] [OPTINAL asc|desc]
 require 'httparty'
+require 'csv'
 
 params = {}
 params[:type]  = ARGV[0]
 params[:q]     = ARGV[1]
 params[:sort]  = ARGV[2] || ""
 params[:order] = ARGV[3] || ""
-params[:csv]   = ARGV[4]
 
 
 if params[:type] == "help"
@@ -87,8 +87,27 @@ headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-
 
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
+results = response['items']
 
-raise response.inspect
 
-unless params[:csv].nil?
+  json = {}
+  results.each do |res|
+    json.merge!({:login => res['owner']['login']})
+    json.merge!({:id => res['id']})
+    json.merge!({:name => res['name']})
+    json.merge!({:full_name => res['full_name']})
+    json.merge!({:description => res['description']})
+    json.merge!({:fork => res['fork']})
+    json.merge!({:html_url => res['html_url']})
+    json.merge!({:homepage => res['homepage']})
+    json.merge!({:language => res['language']})
+    json.merge!({:forks_count => res['forks_count']})
+    json.merge!({:watchers_count => res['watchers_count']})
+    json.merge!({:open_issues_count => res['open_issues_count']})
+    json.merge!({:created_at => res['created_at']})
+    json.merge!({:pushed_at => res['pushed_at']})
+  end
+
+CSV.open("results.csv", "w") do |csv|
+    csv << json.values
 end
