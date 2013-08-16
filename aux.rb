@@ -32,11 +32,11 @@ def process_data_repos response, token, params
 
 		data_aux = { 	
       'name' 						=> item['name'],
-			'owner'						=> get_user(item['repository']['owner']['login'], token),
 			'created_at'			=> item['created_at'],
 			'pushed_at' 			=> item['pushed_at'],
 			'watchers_count'	=> item['watchers_count'],
 			'forks_count' 		=> item['forks_count'],
+			'owner'						=> get_user(item['repository']['owner']['login'], token),
 			'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
 			'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)
     }
@@ -56,8 +56,6 @@ def process_data_code response, token, params
 
 		data_aux = {
       'name' 							=> item['repository']['name'],
-			'owner'							=> get_user(item['repository']['owner']['login'], token),
-			'string_seargh' 		=> params,
 			'created_at'				=> data_repos['created_at'],
 			'pushed_at' 				=> data_repos['pushed_at'],
 			'updated_at'				=> data_repos['updated_at'],
@@ -66,6 +64,7 @@ def process_data_code response, token, params
 			'watchers_count'		=> data_repos['watchers_count'],
 			'forks_count' 			=> data_repos['forks_count'],
 			'open_issues_count'	=> data_repos['open_issues_count'],
+			'owner'							=> get_user(item['repository']['owner']['login'], token),
 			'collaborators'			=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
 			'contributors'			=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)
     }
@@ -93,8 +92,12 @@ def get_contributors owner, repos, token
 	response = get_response(url, token)
 	contributors = []
 
-	response.each do |item| 
-		contributors << get_user(item['login'], token)
+	response.each do |item|
+    begin
+      contributors << get_user(item['login'], token)
+    rescue Exception => e
+      puts e.inspect
+    end
 	end
 
 	return contributors
@@ -105,8 +108,12 @@ def get_collaborators owner, repos, token
 	response = get_response(url, token)
 	collaborators = []
 
-	response.each do |item| 
-		collaborators << get_user(item['login'], token)
+	response.each do |item|
+    begin
+      collaborators << get_user(item['login'], token)
+    rescue Exception => e
+      puts e.inspect
+    end
 	end
 
 	return collaborators
