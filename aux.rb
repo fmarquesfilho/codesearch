@@ -22,12 +22,7 @@ def verify_rate_limit header
 end
 
 def process_data type, response, token, params
-  json = send("process_data_#{type}".to_sym, response, token, params)
-  CSV.open("results.csv", "ab") do |csv|
-    json.each do |item|
-      csv << item.values
-    end
-  end
+  send("process_data_#{type}".to_sym, response, token, params)
 end
 
 def process_data_repos response, token, params
@@ -35,17 +30,18 @@ def process_data_repos response, token, params
 	
 	response['items'].each do |item|
 
-		data_aux = { 	'name' 						=> item['name'],
-									'owner'						=> get_user(item['repository']['owner']['login'], token),
-									'created_at'			=> item['created_at'],
-									'pushed_at' 			=> item['pushed_at'],
-									'watchers_count'	=> item['watchers_count'],
-									'forks_count' 		=> item['forks_count'],
-									'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
-									'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)}
+		data_aux = { 	
+      'name' 						=> item['name'],
+			'owner'						=> get_user(item['repository']['owner']['login'], token),
+			'created_at'			=> item['created_at'],
+			'pushed_at' 			=> item['pushed_at'],
+			'watchers_count'	=> item['watchers_count'],
+			'forks_count' 		=> item['forks_count'],
+			'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
+			'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)
+    }
 
-		ap data_aux
-
+		save_in_csv params[:q]+'.csv', data_aux
 		data << data_aux
 	end
 
@@ -58,22 +54,23 @@ def process_data_code response, token, params
 	response['items'].each do |item|
 		data_repos = get_repos(item['repository']['owner']['login'], item['repository']['name'], token)
 
-		data_aux = {	'name' 							=> item['repository']['name'],
-									'owner'							=> get_user(item['repository']['owner']['login'], token),
-									'string_seargh' 		=> params,
-									'created_at'				=> data_repos['created_at'],
-									'pushed_at' 				=> data_repos['pushed_at'],
-									'updated_at'				=> data_repos['updated_at'],
-									'fork'							=> data_repos['fork'], 
-									'language'					=> data_repos['language'], 
-									'watchers_count'		=> data_repos['watchers_count'],
-									'forks_count' 			=> data_repos['forks_count'],
-									'open_issues_count'	=> data_repos['open_issues_count'],
-									'collaborators'			=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
-									'contributors'			=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)}
-		
-		ap data_aux
-	
+		data_aux = {
+      'name' 							=> item['repository']['name'],
+			'owner'							=> get_user(item['repository']['owner']['login'], token),
+			'string_seargh' 		=> params,
+			'created_at'				=> data_repos['created_at'],
+			'pushed_at' 				=> data_repos['pushed_at'],
+			'updated_at'				=> data_repos['updated_at'],
+			'fork'							=> data_repos['fork'], 
+			'language'					=> data_repos['language'], 
+			'watchers_count'		=> data_repos['watchers_count'],
+			'forks_count' 			=> data_repos['forks_count'],
+			'open_issues_count'	=> data_repos['open_issues_count'],
+			'collaborators'			=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
+			'contributors'			=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)
+    }
+
+		save_in_csv params[:q]+'.csv', data_aux
 		data << data_aux	
 	end
 
@@ -125,10 +122,8 @@ def get_response url, token
 	return response
 end
 
-def save_in_csv file, results
-	CSV.open(file , "w") do |csv|
-  	results.each do |result|
-    	csv << result.values
-  	end
+def save_in_csv file, result
+	CSV.open(file , "ab") do |csv|
+    csv << result.values
 	end
 end
