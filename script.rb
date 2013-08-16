@@ -1,4 +1,4 @@
-# Usage: $ ruby script.rb [repos|code|issues|users] [query_string] [OPTIONAL stars|forks|updated] [OPTINAL asc|desc]
+# Usage: $ ruby script.rb [repos|code|issues|users] [query_string]
 require 'httparty'
 require 'launchy'
 require 'socket'
@@ -8,9 +8,6 @@ require_relative 'aux'
 params = {}
 params[:type]  = ARGV[0]
 params[:q]     = ARGV[1]
-params[:sort]  = ARGV[2] || ""
-params[:order] = ARGV[3] || ""
-params[:csv]   = ARGV[4]
 
 if params[:type].nil? || params[:q].nil? || !%w[repos code issues users].include?(params[:type])
   puts "Usage: $ ruby script.rb [repos|code|issues|users] [query_string] [stars|forks|updated] [asc|desc]"
@@ -54,8 +51,6 @@ end
 params[:q] = params[:q].gsub(/\s/, '+')
 
 url = "https://api.github.com/search/#{params[:type]}?q=#{params[:q]}"
-url += "&sort=#{params[:sort]}"   unless params[:sort].empty?
-url += "&order=#{params[:order]}" unless params[:order].empty?
 url += "&" + token
 url += "&per_page=100"
 
