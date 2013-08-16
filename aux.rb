@@ -1,4 +1,5 @@
 #Auxiliar functions for script
+require 'csv'
 
 def pagination header
 	links = {}
@@ -20,6 +21,15 @@ def verify_rate_limit header
 	end
 end
 
+def process_data type, response, token, params
+  json = send("process_data_#{type}".to_sym, response, token, params)
+  CSV.open("results.csv", "ab") do |csv|
+    json.each do |item|
+      csv << item.values
+    end
+  end
+end
+
 def process_data_repos response, token, params
 	data = []
 	
@@ -28,14 +38,13 @@ def process_data_repos response, token, params
 		data_aux = { 	'login' 					=> item['owner']['login'],
 									'email' 					=> get_email(item['owner']['login'], token),
 									'name' 						=> item['name'],
-									'string_seargh' 	=> params,
+									'full_name' 		  => item['full_name'],
 									'created_at'			=> item['created_at'],
 									'pushed_at' 			=> item['pushed_at'],
 									'watchers_count'	=> item['watchers_count'],
 									'forks_count' 		=> item['forks_count'],
 									'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)}
 
-		ap data_aux
 		data << data_aux
 	end
 
@@ -58,7 +67,6 @@ def process_data_code response, token, params
 									'forks_count' 		=> data_repos['forks_count'],
 									'contributors'		=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)}
 		
-		ap data_aux
 		data << data_aux	
 	end
 
