@@ -35,15 +35,16 @@ def process_data_repos response, token, params
 	
 	response['items'].each do |item|
 
-		data_aux = { 	'login' 					=> item['owner']['login'],
-									'email' 					=> get_email(item['owner']['login'], token),
-									'name' 						=> item['name'],
-									'full_name' 		  => item['full_name'],
+		data_aux = { 	'name' 						=> item['name'],
+									'owner'						=> get_user(item['repository']['owner']['login'], token),
 									'created_at'			=> item['created_at'],
 									'pushed_at' 			=> item['pushed_at'],
 									'watchers_count'	=> item['watchers_count'],
 									'forks_count' 		=> item['forks_count'],
+									'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
 									'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)}
+
+		ap data_aux
 
 		data << data_aux
 	end
@@ -57,16 +58,22 @@ def process_data_code response, token, params
 	response['items'].each do |item|
 		data_repos = get_repos(item['repository']['owner']['login'], item['repository']['name'], token)
 
-		data_aux = { 	'login' 					=> item['repository']['owner']['login'],
-									'email' 					=> get_email(item['repository']['owner']['login'], token),
-									'name' 						=> item['repository']['name'],
-									'string_seargh' 	=> params,
-									'created_at'			=> data_repos['created_at'],
-									'pushed_at' 			=> data_repos['pushed_at'],
-									'watchers_count'	=> data_repos['watchers_count'],
-									'forks_count' 		=> data_repos['forks_count'],
-									'contributors'		=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)}
+		data_aux = {	'name' 							=> item['repository']['name'],
+									'owner'							=> get_user(item['repository']['owner']['login'], token),
+									'string_seargh' 		=> params,
+									'created_at'				=> data_repos['created_at'],
+									'pushed_at' 				=> data_repos['pushed_at'],
+									'updated_at'				=> data_repos['updated_at'],
+									'fork'							=> data_repos['fork'], 
+									'language'					=> data_repos['language'], 
+									'watchers_count'		=> data_repos['watchers_count'],
+									'forks_count' 			=> data_repos['forks_count'],
+									'open_issues_count'	=> data_repos['open_issues_count'],
+									'collaborators'			=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
+									'contributors'			=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)}
 		
+		ap data_aux
+	
 		data << data_aux	
 	end
 
@@ -78,10 +85,10 @@ def get_repos login, repos, token
 	return get_response(url, token)
 end
 
-def get_email login, token
+def get_user login, token
 	url = 'https://api.github.com/users/' + login
 	response = get_response(url, token)
-	return response['email']
+	return {'name' => response['name'], 'login'=> response['login'], 'email' => response['email'], 'location' => response['location']}
 end
 
 def get_contributors owner, repos, token
@@ -90,10 +97,22 @@ def get_contributors owner, repos, token
 	contributors = []
 
 	response.each do |item| 
-		contributors << {'login' => item['login'], 'email' => get_email(item['login'], token)}
+		contributors << get_user(item['login'], token)
 	end
 
 	return contributors
+end
+
+def get_collaborators owner, repos, token
+	url = 'https://api.github.com/repos/' + owner + '/' + repos + '/collaborators'
+	response = get_response(url, token)
+	collaborators = []
+
+	response.each do |item| 
+		collaborators << get_user(item['login'], token)
+	end
+
+	return collaborators
 end
 
 def get_response url, token
