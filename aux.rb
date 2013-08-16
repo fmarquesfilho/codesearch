@@ -23,7 +23,7 @@ end
 
 def process_data type, response, token, params
   json = send("process_data_#{type}".to_sym, response, token, params)
-  CSV.open("results.csv", "ab") do |csv|
+  CSV.open("results-#{type}-#{params[:q]}[#{Time.now}].csv", "ab") do |csv|
     json.each do |item|
       csv << item.values
     end
@@ -60,7 +60,6 @@ def process_data_code response, token, params
 
 		data_aux = {	'name' 							=> item['repository']['name'],
 									'owner'							=> get_user(item['repository']['owner']['login'], token),
-									'string_seargh' 		=> params,
 									'created_at'				=> data_repos['created_at'],
 									'pushed_at' 				=> data_repos['pushed_at'],
 									'updated_at'				=> data_repos['updated_at'],
