@@ -30,19 +30,18 @@ def process_data_repos response, token, params
 	
 	response['items'].each do |item|
 
-		data_aux = { 	'name' 						=> item['name'],
-									'owner'						=> get_user(item['repository']['owner']['login'], token),
-									'created_at'			=> item['created_at'],
-									'pushed_at' 			=> item['pushed_at'],
-									'watchers_count'	=> item['watchers_count'],
-									'forks_count' 		=> item['forks_count'],
-									'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
-									'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)}
-
-		ap data_aux
+		data_aux = { 	
+      'name' 						=> item['name'],
+			'owner'						=> get_user(item['repository']['owner']['login'], token),
+			'created_at'			=> item['created_at'],
+			'pushed_at' 			=> item['pushed_at'],
+			'watchers_count'	=> item['watchers_count'],
+			'forks_count' 		=> item['forks_count'],
+			'collaborators'		=> get_collaborators(item['repository']['owner']['login'], item['repository']['name'], token),
+			'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)
+    }
 
 		save_in_csv params[:q]+'.csv', data_aux
-
 		data << data_aux
 	end
 
@@ -95,8 +94,12 @@ def get_contributors owner, repos, token
 	response = get_response(url, token)
 	contributors = []
 
-	response.each do |item| 
-		contributors << get_user(item['login'], token)
+	response.each do |item|
+    begin
+      contributors << get_user(item['login'], token)
+    rescue Exception => e
+      puts e.inspect
+    end
 	end
 
 	return contributors
@@ -107,8 +110,12 @@ def get_collaborators owner, repos, token
 	response = get_response(url, token)
 	collaborators = []
 
-	response.each do |item| 
-		collaborators << get_user(item['login'], token)
+	response.each do |item|
+    begin
+      collaborators << get_user(item['login'], token)
+    rescue Exception => e
+      puts e.inspect
+    end
 	end
 
 	return collaborators
