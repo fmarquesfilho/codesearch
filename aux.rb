@@ -97,3 +97,11 @@ def get_response url, token
 
 	return response
 end
+
+def save_in_csv file, results
+	CSV.open(file , "w") do |csv|
+  	results.each do |result|
+    	csv << result.values
+  	end
+	end
+end
