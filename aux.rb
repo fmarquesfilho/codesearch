@@ -22,12 +22,7 @@ def verify_rate_limit header
 end
 
 def process_data type, response, token, params
-  json = send("process_data_#{type}".to_sym, response, token, params)
-  CSV.open("results-#{type}-#{params[:q]}[#{Time.now}].csv", "ab") do |csv|
-    json.each do |item|
-      csv << item.values
-    end
-  end
+  send("process_data_#{type}".to_sym, response, token, params)
 end
 
 def process_data_repos response, token, params
@@ -46,6 +41,8 @@ def process_data_repos response, token, params
 
 		ap data_aux
 
+		save_in_csv params[:q]+'.csv', data_aux
+
 		data << data_aux
 	end
 
@@ -60,6 +57,7 @@ def process_data_code response, token, params
 
 		data_aux = {	'name' 							=> item['repository']['name'],
 									'owner'							=> get_user(item['repository']['owner']['login'], token),
+									'string_seargh' 		=> params,
 									'created_at'				=> data_repos['created_at'],
 									'pushed_at' 				=> data_repos['pushed_at'],
 									'updated_at'				=> data_repos['updated_at'],
@@ -73,6 +71,8 @@ def process_data_code response, token, params
 		
 		ap data_aux
 	
+		save_in_csv params[:q]+'.csv', data_aux
+
 		data << data_aux	
 	end
 
@@ -124,10 +124,8 @@ def get_response url, token
 	return response
 end
 
-def save_in_csv file, results
-	CSV.open(file , "w") do |csv|
-  	results.each do |result|
-    	csv << result.values
-  	end
+def save_in_csv file, result
+	CSV.open(file , "ab") do |csv|
+    csv << result.values
 	end
 end
