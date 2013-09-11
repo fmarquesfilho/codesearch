@@ -1,4 +1,4 @@
-# Usage: $ ruby script.rb [repos|code|issues|users] [query_string]
+# Usage: $ ruby script.rb [repositories|code|issues|users] [query_string]
 require 'httparty'
 require 'launchy'
 require 'socket'
@@ -9,8 +9,8 @@ params = {}
 params[:type]  = ARGV[0]
 params[:q]     = ARGV[1]
 
-if params[:type].nil? || params[:q].nil? || !%w[repos code issues users].include?(params[:type])
-  puts "Usage: $ ruby script.rb [repos|code|issues|users] [query_string] [stars|forks|updated] [asc|desc]"
+if params[:type].nil? || params[:q].nil? || !%w[repositories code issues users].include?(params[:type])
+  puts "Usage: $ ruby script.rb [repositories|code|issues|users] [query_string] [stars|forks|updated] [asc|desc]"
   puts "Try: ruby script.rb help"
   exit
 end
@@ -59,8 +59,11 @@ headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-
 puts "URL: #{url}"
 response = HTTParty.get(url, :headers => headers)
 
+file = "results-codesearch-[type-#{params[:type]}]-[#{params[:q]}][#{Time.now}].csv"
 
-process_data(params[:type], response, token, params) 
+send("save_csv_head_#{params[:type]}".to_sym, file)
+
+process_data(params[:type], response, token, params, file) 
 
 #Pagination
 unless response.headers['link'].nil?
@@ -70,6 +73,6 @@ unless response.headers['link'].nil?
 		response = HTTParty.get(links['next'], :headers => headers)
 		links = pagination(response.headers)
 		verify_rate_limit(response.headers)
-		process_data(params[:type], response, token, params) 
+		process_data(params[:type], response, token, params, file)
 	end
 end

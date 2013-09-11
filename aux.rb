@@ -21,13 +21,13 @@ def verify_rate_limit header
 	end
 end
 
-def process_data type, response, token, params
-  send("process_data_#{type}".to_sym, response, token, params)
+def process_data type, response, token, params, file
+  send("process_data_#{type}".to_sym, response, token, params, file)
 end
 
-def process_data_repos response, token, params
+def process_data_repositories response, token, params, file
 	data = []
-	
+
 	response['items'].each do |item|
 
 		data_aux = { 	
@@ -41,14 +41,13 @@ def process_data_repos response, token, params
 			'contributors'		=> get_contributors(item['owner']['login'], item['name'], token)
     }
 
-		save_in_csv params[:q]+'.csv', data_aux
+		ap data_aux
+		save_in_csv(file, data_aux)
 		data << data_aux
 	end
-
-	return data
 end
 
-def process_data_code response, token, params
+def process_data_code response, token, params, file
 	data = []
 
 	response['items'].each do |item|
@@ -56,7 +55,6 @@ def process_data_code response, token, params
 
 		data_aux = {	'name' 							=> item['repository']['name'],
 									'owner'							=> get_user(item['repository']['owner']['login'], token),
-									'string_seargh' 		=> params,
 									'created_at'				=> data_repos['created_at'],
 									'pushed_at' 				=> data_repos['pushed_at'],
 									'updated_at'				=> data_repos['updated_at'],
@@ -69,13 +67,9 @@ def process_data_code response, token, params
 									'contributors'			=> get_contributors(item['repository']['owner']['login'], item['repository']['name'], token)}
 		
 		ap data_aux
-	
-		save_in_csv params[:q]+'.csv', data_aux
-
+		save_in_csv(file, data_aux)
 		data << data_aux	
 	end
-
-	return data
 end
 
 def get_repos login, repos, token
@@ -125,14 +119,34 @@ def get_response url, token
 	headers = { 'Accept' => 'application/vnd.github.preview.text-match+json', 'User-Agent' => 'coopera-codesearch' }
 	url += '?' + token
 
-	response = HTTParty.get(url, headers)
-	verify_rate_limit(response.headers)
+	begin
+		response = HTTParty.get(url, headers)
+		verify_rate_limit(response.headers)
+	rescue Exception => e
+		puts e.inspect
+	end
 
 	return response
 end
 
+def save_csv_head_code file
+	head = 'name,owner,string_seargh,created_at,pushed_at,updated_at,fork,language,watchers_count,forks_count,open_issues_count,collaborators,contributors'
+	head_for_save = {}
+	
+	head.split(',').inject(Hash.new{|aa,b| aa[b] = b}) do |aa,b|
+		aa[b] = b
+		head_for_save = aa
+	end
+
+	save_in_csv(file, head_for_save)
+end
+
 def save_in_csv file, result
-	CSV.open(file , "ab") do |csv|
-    csv << result.values
+	begin
+		CSV.open(file , "ab") do |csv|
+    	csv << result.values
+		end
+	rescue Exception => e
+		puts e.inspect
 	end
 end
